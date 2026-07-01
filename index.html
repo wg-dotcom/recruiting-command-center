@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sagan Recruiting Command Center</title>
+<style>
+  :root{
+    --bg:#0a0e14; --bg2:#0d1219; --card:#121a24; --card2:#0f1620;
+    --line:#1e2a38; --line2:#28384a;
+    --txt:#e6edf3; --muted:#8a97a6; --dim:#5d6b7a;
+    --wg:#a78bfa; --core:#38bdf8; --passport:#34d399; --flex:#fbbf24;
+    --prod:#fb7185; --internal:#94a3b8; --unspec:#475569;
+    --good:#34d399; --warn:#fbbf24; --bad:#f87171; --accent:#5eead4;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
+    font-size:14px;-webkit-font-smoothing:antialiased}
+  body{background:
+    radial-gradient(1200px 600px at 12% -8%,rgba(94,234,212,.06),transparent 55%),
+    radial-gradient(1000px 500px at 100% 0%,rgba(167,139,250,.07),transparent 55%),
+    var(--bg);min-height:100vh;padding-bottom:60px}
+  a{color:var(--accent)}
+  .wrap{max-width:1480px;margin:0 auto;padding:0 22px}
+
+  /* header */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(10,14,20,.92),rgba(10,14,20,.72));
+    border-bottom:1px solid var(--line)}
+  .htop{display:flex;align-items:baseline;gap:14px;padding:16px 0 12px}
+  .htop h1{font-size:18px;font-weight:650;letter-spacing:.2px;margin:0}
+  .htop h1 .dot{color:var(--accent)}
+  .htop .sub{color:var(--muted);font-size:12px}
+  .htop .stamp{margin-left:auto;color:var(--dim);font-size:11.5px;font-family:var(--mono)}
+  .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding-bottom:14px}
+  .seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+  .seg button{background:transparent;border:0;color:var(--muted);font:inherit;font-size:12px;
+    padding:5px 11px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:.12s}
+  .seg button:hover{color:var(--txt)}
+  .seg button.on{background:var(--line2);color:var(--txt)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--card2);border:1px solid var(--line);color:var(--muted);font:inherit;
+    font-size:12px;padding:5px 11px;border-radius:20px;cursor:pointer;transition:.12s;display:flex;align-items:center;gap:6px}
+  .chip:hover{color:var(--txt);border-color:var(--line2)}
+  .chip.on{color:var(--txt);background:rgba(94,234,212,.1);border-color:var(--accent)}
+  .chip .sw{width:8px;height:8px;border-radius:50%}
+  .search{flex:1;min-width:180px;max-width:280px}
+  .search input{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:8px;
+    color:var(--txt);font:inherit;font-size:12.5px;padding:7px 11px;outline:none}
+  .search input:focus{border-color:var(--line2)}
+
+  /* kpi */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:20px 0 8px}
+  .kpi{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:13px;padding:14px 15px;position:relative;overflow:hidden}
+  .kpi::after{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--bar,var(--accent));opacity:.7}
+  .kpi .lab{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+  .kpi .val{font-size:28px;font-weight:680;font-family:var(--mono);margin-top:7px;line-height:1}
+  .kpi .note{color:var(--dim);font-size:11px;margin-top:6px;font-family:var(--mono)}
+  .kpi .note b{color:var(--muted);font-weight:600}
+
+  /* grid + cards */
+  .grid{display:grid;gap:14px;margin-top:14px}
+  .g2{grid-template-columns:1.35fr 1fr}
+  .g2b{grid-template-columns:1fr 1fr}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:14px;padding:16px 17px}
+  .card h2{font-size:13px;font-weight:620;margin:0 0 2px;letter-spacing:.2px}
+  .card .desc{color:var(--dim);font-size:11.5px;margin-bottom:14px}
+  .card h2 .hint{float:right;color:var(--dim);font-size:11px;font-weight:500;font-family:var(--mono)}
+
+  /* funnel */
+  .funnel{display:flex;flex-direction:column;gap:7px}
+  .frow{display:grid;grid-template-columns:170px 1fr 46px;align-items:center;gap:10px}
+  .frow .fl{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fbar{height:22px;background:var(--card2);border-radius:6px;overflow:hidden;position:relative;border:1px solid var(--line)}
+  .fbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),#3bd6c6);min-width:2px}
+  .frow .fn{font-family:var(--mono);font-size:13px;text-align:right;font-weight:600}
+  .conv{color:var(--dim);font-size:10.5px;font-family:var(--mono);text-align:center}
+
+  /* donut + ttf */
+  .splitcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .donutwrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:6px 0}
+  .donut{position:relative;width:140px;height:140px}
+  .donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .donut .ctr .b{font-family:var(--mono);font-size:26px;font-weight:680}
+  .donut .ctr .s{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px}
+  .leg{display:flex;flex-direction:column;gap:5px;font-size:12px}
+  .leg div{display:flex;align-items:center;gap:7px;color:var(--muted)}
+  .leg .sw{width:9px;height:9px;border-radius:2px}
+  .leg b{color:var(--txt);font-family:var(--mono);margin-left:auto;font-weight:600}
+
+  .hbars{display:flex;flex-direction:column;gap:9px}
+  .hb{display:grid;grid-template-columns:120px 1fr 54px;align-items:center;gap:9px;font-size:12px}
+  .hb .l{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hb .t{height:16px;background:var(--card2);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .hb .t i{display:block;height:100%}
+  .hb .v{font-family:var(--mono);text-align:right;font-weight:600}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--dim);font-weight:600;font-size:10.5px;text-transform:uppercase;
+    letter-spacing:.5px;padding:7px 9px;border-bottom:1px solid var(--line);position:sticky;top:0;
+    background:var(--card);cursor:pointer;user-select:none;white-space:nowrap}
+  th:hover{color:var(--muted)}
+  th.num,td.num{text-align:right;font-family:var(--mono)}
+  td{padding:8px 9px;border-bottom:1px solid rgba(30,42,56,.55);vertical-align:middle}
+  tr:hover td{background:rgba(94,234,212,.03)}
+  .tscroll{max-height:440px;overflow:auto;border-radius:9px;border:1px solid var(--line)}
+  .tag{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:20px;font-family:var(--mono);white-space:nowrap}
+  .pill{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:5px;background:var(--card2);border:1px solid var(--line)}
+  .age-ok{color:var(--muted)} .age-warn{color:var(--warn);font-weight:600} .age-bad{color:var(--bad);font-weight:700}
+  .miniflag{font-size:10px;color:var(--bad);background:rgba(248,113,113,.12);padding:1px 6px;border-radius:4px}
+  .miniflag.warn{color:#fcd34d;background:rgba(251,191,36,.14)}
+  .bar-cell{display:flex;align-items:center;gap:7px}
+  .bar-cell .mb{flex:1;height:7px;background:var(--card2);border-radius:4px;overflow:hidden;min-width:40px}
+  .bar-cell .mb i{display:block;height:100%;background:var(--accent)}
+
+  /* monthly */
+  .months{display:flex;align-items:flex-end;gap:5px;height:150px;padding-top:10px}
+  .mcol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+  .mcol .stack{width:78%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;min-height:2px}
+  .mcol .stack i{display:block}
+  .mcol .ml{color:var(--dim);font-size:9.5px;font-family:var(--mono);white-space:nowrap}
+  .mcol .mv{color:var(--muted);font-size:10px;font-family:var(--mono)}
+
+  .foot{color:var(--dim);font-size:11px;margin-top:26px;text-align:center;line-height:1.7}
+  .empty{color:var(--dim);font-size:12px;padding:24px;text-align:center}
+  @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.g2,.g2b{grid-template-columns:1fr}}
+
+  /* visibility helper — beats .seg{display:flex} */
+  [hidden]{display:none!important}
+
+  /* kanban */
+  .kpis-board{grid-template-columns:repeat(6,1fr);margin-top:20px}
+  @media(max-width:1100px){.kpis-board{grid-template-columns:repeat(3,1fr)}}
+  .boardhint{color:var(--dim);font-size:11.5px;margin:4px 2px 10px}
+  .board{display:flex;gap:12px;overflow-x:auto;padding-bottom:18px;align-items:flex-start}
+  .bcol{flex:0 0 268px;background:var(--card2);border:1px solid var(--line);border-radius:12px;
+    display:flex;flex-direction:column;max-height:74vh}
+  .bcol-head{padding:11px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;
+    background:var(--card2);border-radius:12px 12px 0 0;z-index:2}
+  .bcol-head .t{font-size:12.5px;font-weight:650;display:flex;align-items:center;gap:7px}
+  .bcol-head .t .n{margin-left:auto;font-family:var(--mono);color:var(--muted);font-weight:600;
+    background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1px 9px;font-size:11px}
+  .bcol-head .sum{color:var(--good);font-family:var(--mono);font-size:11.5px;margin-top:4px;font-weight:600}
+  .bcol-head .stbar{height:3px;border-radius:3px;margin-top:8px;background:var(--accent);opacity:.8}
+  .bcol-body{overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:8px}
+  .bcard{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-left-width:3px;border-radius:9px;padding:10px 11px;cursor:pointer;transition:.12s;position:relative}
+  .bcard:hover{border-color:var(--line2);transform:translateY(-1px)}
+  .bcard:hover .ext{color:var(--accent)}
+  .bcard .ext{position:absolute;top:8px;right:9px;color:var(--dim);font-size:11px}
+  .bcard .cand{color:var(--accent);font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bcard .role{font-size:12.5px;font-weight:600;line-height:1.3}
+  .bcard .co{color:var(--muted);font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bcard .adv{color:var(--dim);font-size:11px;margin-top:5px;display:flex;align-items:center;gap:5px}
+  .bcard .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center}
+  .bcard .m{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;
+    background:var(--card2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .bcard .m.deal{color:var(--good);border-color:rgba(52,211,153,.3)}
+  .bcard .m.age-warn{color:var(--warn);border-color:rgba(251,191,36,.3)}
+  .bcard .m.age-bad{color:var(--bad);border-color:rgba(248,113,113,.35)}
+  .bcard .flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .bcard .fl{font-size:9.5px;padding:1px 6px;border-radius:4px;background:rgba(248,113,113,.13);
+    color:#fca5a5;border:1px solid rgba(248,113,113,.2)}
+  .bcard .fl.warn{background:rgba(251,191,36,.12);color:#fcd34d;border-color:rgba(251,191,36,.2)}
+  .bcard .lntag{font-size:9.5px;padding:1px 6px;border-radius:20px;font-weight:600}
+  .bcol-body .more{color:var(--dim);font-size:11px;text-align:center;padding:8px}
+
+  /* revenue chart */
+  .revchart{display:flex;align-items:flex-end;gap:14px;height:230px;padding-top:24px;overflow-x:auto}
+  .rmonth{flex:1;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+  .rbars{flex:1;display:flex;align-items:flex-end;gap:4px;width:100%;justify-content:center}
+  .rbars .rb{width:42%;border-radius:4px 4px 0 0;min-height:2px;position:relative;transition:.15s}
+  .rbars .rb.inv{background:linear-gradient(180deg,var(--core),#1f93c7)}
+  .rbars .rb.col{background:linear-gradient(180deg,var(--good),#1f9c6f)}
+  .rbars .rb .cap{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-family:var(--mono);
+    font-size:9.5px;color:var(--muted);white-space:nowrap}
+  .rmonth .rl{color:var(--dim);font-size:10.5px;font-family:var(--mono)}
+  .revleg{display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:12px;color:var(--muted)}
+  .revleg div{display:flex;align-items:center;gap:7px}
+  .revleg .sw{width:11px;height:11px;border-radius:3px}
+  .advsel{background:var(--card2);border:1px solid var(--line);color:var(--txt);font:inherit;
+    font-size:12px;padding:6px 10px;border-radius:8px;outline:none;cursor:pointer;max-width:200px}
+  .advsel:focus{border-color:var(--line2)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="htop">
+      <h1><span class="dot">●</span> Recruiting Command Center</h1>
+      <span class="sub">Sagan Passport · Hiring Requests</span>
+      <span class="stamp" id="stamp"></span>
+    </div>
+    <div class="filters">
+      <div class="seg" id="viewSeg">
+        <button data-view="kanban" class="on">Board</button>
+        <button data-view="revenue">Revenue</button>
+      </div>
+      <div class="seg kanban-only" id="pipeSeg" hidden>
+        <button data-p="active" class="on">Active</button>
+        <button data-p="placed">Placed / won</button>
+        <button data-p="cancelled">Cancelled</button>
+      </div>
+      <div class="seg kanban-only" id="groupSeg" hidden>
+        <button data-g="stage" class="on">By stage</button>
+        <button data-g="advisor">By Talent Advisor</button>
+      </div>
+      <select id="advSel" class="advsel revenue-only" hidden><option value="">All advisors</option></select>
+      <div class="chips" id="lineChips"></div>
+      <div class="search"><input id="q" placeholder="Search company, advisor, role…" /></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div id="kanbanView" hidden>
+    <div class="kpis kpis-board" id="boardKpis"></div>
+    <div class="boardhint" id="boardHint"></div>
+    <div class="board" id="boardCols"></div>
+  </div>
+
+  <div id="revenueView" hidden>
+    <div class="kpis kpis-board" id="revKpis"></div>
+    <div class="boardhint" id="revHint"></div>
+    <div class="card" style="margin-top:6px">
+      <h2>Invoiced vs Collected by month <span class="hint">Core + WG tracker</span></h2>
+      <div class="desc">Invoiced = total deal value billed that month (Invoice Date). Collected = cash in that month — full payments land in their payment month; installments are spread evenly across the months since first payment, so the totals tie out to Total Paid.</div>
+      <div class="revchart" id="revChart"></div>
+    </div>
+    <div class="grid g2b" style="margin-top:14px">
+      <div class="card">
+        <h2>By Talent Advisor</h2>
+        <div class="desc">Invoiced, collected and open receivables per advisor (respects the line + advisor filters). Click a header to sort.</div>
+        <div class="tscroll" style="max-height:none"><table id="revAdvTbl"></table></div>
+      </div>
+      <div class="card">
+        <h2>Receivables — open balances <span class="hint" id="revArHint"></span></h2>
+        <div class="desc">Customers with money outstanding (Deal Value − Total Paid), counting only HRs in <b>Placed</b> or <b>Invoice</b> status. Paused/cancelled excluded. Sorted by amount owed.</div>
+        <div class="tscroll"><table id="revArTbl"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  // Live data: set LIVE_URL to the Apps Script web-app /exec URL to read the sheet on every load.
+  // Empty = use the baked-in data.js snapshot. If a live fetch fails, it falls back to data.js.
+  const LIVE_URL = "";
+  function initApp(DATA){
+  const ROWS = DATA.rows||[];
+
+  // ---- service line colors / order ----
+  const LINE_COLORS={'White Glove':'var(--wg)','Core':'var(--core)','Passport':'var(--passport)',
+    'Flex':'var(--flex)','Production Line':'var(--prod)','Internal':'var(--internal)','Unspecified':'var(--unspec)'};
+  const LINE_ORDER=['White Glove','Core','Passport','Flex','Production Line','Internal','Unspecified'];
+  const lineColor=l=>LINE_COLORS[l]||'var(--unspec)';
+
+  // ---- stage definitions ----
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:NaN;};
+  const isHired=r=>num(r.statusDigit)===100;
+  const isCancelled=r=>num(r.statusDigit)<0;
+  const isClosedLost=r=>num(r.statusDigit)===85;            // unresponsive - closed
+  const isTerminal=r=>isHired(r)||isCancelled(r)||isClosedLost(r);
+  const isActive=r=>{const d=num(r.statusDigit);return Number.isFinite(d)&&d>=0&&d<100&&d!==85;};
+  // canonical active-stage buckets for the funnel
+  const STAGES=[
+    {k:'New / triage',test:d=>d>=0&&d<30},
+    {k:'Open · sourcing',test:d=>d>=30&&d<40},
+    {k:'Candidates ready',test:d=>d>=40&&d<50},
+    {k:'Sent to member',test:d=>d>=50&&d<60},
+    {k:'Member interview',test:d=>d>=60&&d<90},
+    {k:'Replacement',test:d=>d===90},
+    {k:'Final interview',test:d=>d>=95&&d<99},
+    {k:'Offered',test:d=>d===99},
+  ];
+
+  // ---- state ----
+  const state={win:0,lines:new Set(LINE_ORDER),q:'',view:'kanban',group:'stage',pipeline:'active',advisor:''};
+  const BOARD=DATA.board||[];
+  const BOARD_STAGES=DATA.stageOrder||[];
+  const TERMINAL=['Placed / Hired','Closed / Lost'];
+  const ACTIVE_STAGES=BOARD_STAGES.filter(s=>!TERMINAL.includes(s));
+  const NOW=Date.now();
+
+  function baseFiltered(){
+    const q=state.q.trim().toLowerCase();
+    return ROWS.filter(r=>{
+      if(!state.lines.has(r.serviceLine)) return false;
+      if(state.win){const t=Date.parse(r.requestDate||r.createdTime);
+        if(!(Number.isFinite(t)&&(NOW-t)<=state.win*864e5)) return false;}
+      if(q){const blob=((r.company||'')+' '+(r.recruiter||'')+' '+(r.jobTitle||'')+' '+(r.accountManager||'')+' '+(r.podLeader||'')+' '+(r.reqNum||'')).toLowerCase();
+        if(!blob.includes(q)) return false;}
+      return true;
+    });
+  }
+  // ---- helpers ----
+  const fmt=n=>n==null||isNaN(n)?'—':Math.round(n).toLocaleString();
+  const pct=(a,b)=>b?Math.round(a/b*100):0;
+  const avg=arr=>arr.length?arr.reduce((s,x)=>s+x,0)/arr.length:null;
+  const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+
+  // ---- KPI ----
+  function renderKPIs(rows){
+    const active=rows.filter(isActive);
+    const hired=rows.filter(isHired);
+    const cancelled=rows.filter(isCancelled);
+    const lost=rows.filter(isClosedLost);
+    const decided=hired.length+cancelled.length+lost.length;
+    const ttf=hired.map(r=>num(r.daysToFill)).filter(Number.isFinite);
+    const slaRows=rows.filter(r=>r.slaOpenToHired);
+    const slaIn=slaRows.filter(r=>/in sla/i.test(r.slaOpenToHired)).length;
+    const atRisk=active.filter(isAtRisk).length;
+    const k=[
+      {lab:'Live requests',val:fmt(active.length),note:`<b>${fmt(active.reduce((s,r)=>s+(num(r.positionsRequired)||1),0))}</b> seats open`,bar:'var(--accent)'},
+      {lab:'Hired',val:fmt(hired.length),note:`<b>${fmt(cancelled.length)}</b> cancelled · <b>${fmt(lost.length)}</b> lost`,bar:'var(--passport)'},
+      {lab:'Fill rate',val:pct(hired.length,decided)+'%',note:`of <b>${fmt(decided)}</b> decided`,bar:'var(--core)'},
+      {lab:'Avg time-to-fill',val:ttf.length?fmt(avg(ttf))+'d':'—',note:`<b>${fmt(ttf.length)}</b> hired w/ data`,bar:'var(--wg)'},
+      {lab:'Open→Hired SLA',val:slaRows.length?pct(slaIn,slaRows.length)+'%':'—',note:`<b>${fmt(slaIn)}</b>/<b>${fmt(slaRows.length)}</b> in SLA`,bar:'var(--flex)'},
+      {lab:'Aging &gt;1y / repl',val:fmt(atRisk),note:`<b>${pct(atRisk,active.length)}%</b> of live`,bar:'var(--bad)'},
+    ];
+    const box=document.getElementById('kpis');box.innerHTML='';
+    k.forEach(x=>{const c=el('div','kpi');c.style.setProperty('--bar',x.bar);
+      c.innerHTML=`<div class="lab">${x.lab}</div><div class="val">${x.val}</div><div class="note">${x.note}</div>`;
+      box.appendChild(c);});
+  }
+
+  // Active reqs in this base are almost all long-stale, so the bar for "at-risk"
+  // is set high: open >1 year, or a pending replacement.
+  function isAtRisk(r){
+    const d=num(r.daysSinceReceived);
+    if(num(r.statusDigit)===90) return true;            // replacement
+    return Number.isFinite(d)&&d>365;
+  }
+
+  // ---- funnel (current stage of ACTIVE reqs) ----
+  function renderFunnel(rows){
+    const active=rows.filter(isActive);
+    const counts=STAGES.map(s=>({k:s.k,n:active.filter(r=>s.test(num(r.statusDigit))).length}));
+    const max=Math.max(1,...counts.map(c=>c.n));
+    const box=document.getElementById('funnel');box.innerHTML='';
+    document.getElementById('funnelHint').textContent=active.length+' live';
+    counts.forEach(c=>{
+      const row=el('div','frow');
+      row.innerHTML=`<div class="fl">${c.k}</div>
+        <div class="fbar"><i style="width:${c.n/max*100}%"></i></div>
+        <div class="fn">${c.n}</div>`;
+      box.appendChild(row);
+    });
+  }
+
+  // ---- donut svg ----
+  function donut(node,segments,centerB,centerS){
+    const r=58,c=2*Math.PI*r;let off=0;
+    const total=segments.reduce((s,x)=>s+x.v,0)||1;
+    let circles='';
+    segments.forEach(s=>{const len=s.v/total*c;
+      circles+=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${s.color}" stroke-width="15"
+        stroke-dasharray="${len} ${c-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;
+      off+=len;});
+    node.innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140">
+      <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--card2)" stroke-width="15"/>${circles}</svg>
+      <div class="ctr"><div class="b">${centerB}</div><div class="s">${centerS}</div></div>`;
+  }
+
+  function renderOutcomes(rows){
+    const slaRows=rows.filter(r=>r.slaOpenToHired);
+    const slaIn=slaRows.filter(r=>/in sla/i.test(r.slaOpenToHired)).length;
+    const slaOut=slaRows.length-slaIn;
+    donut(document.getElementById('slaDonut'),
+      [{v:slaIn,color:'var(--good)'},{v:slaOut,color:'var(--bad)'}],
+      slaRows.length?pct(slaIn,slaRows.length)+'%':'—','in SLA');
+
+    const hired=rows.filter(isHired).length, canc=rows.filter(isCancelled).length,
+      lost=rows.filter(isClosedLost).length, active=rows.filter(isActive).length;
+    donut(document.getElementById('outDonut'),
+      [{v:hired,color:'var(--good)'},{v:active,color:'var(--accent)'},{v:lost,color:'var(--warn)'},{v:canc,color:'var(--bad)'}],
+      fmt(hired+canc+lost+active),'total');
+    const leg=document.getElementById('outLeg');
+    const L=[['Hired','var(--good)',hired],['Live','var(--accent)',active],['Lost (unresp.)','var(--warn)',lost],['Cancelled','var(--bad)',canc]];
+    leg.innerHTML=L.map(([n,c,v])=>`<div><span class="sw" style="background:${c}"></span>${n}<b>${fmt(v)}</b></div>`).join('');
+  }
+
+  // ---- by service line ----
+  function renderLineTable(rows){
+    const byL={};
+    rows.forEach(r=>{(byL[r.serviceLine]=byL[r.serviceLine]||[]).push(r);});
+    const order=LINE_ORDER.filter(l=>byL[l]);
+    const t=document.getElementById('lineTbl');
+    t.innerHTML='<tr><th>Service line</th><th class="num">Total</th><th class="num">Live</th><th class="num">Hired</th><th class="num">Fill %</th><th class="num">Avg TTF</th></tr>';
+    const maxTot=Math.max(1,...order.map(l=>byL[l].length));
+    order.forEach(l=>{
+      const arr=byL[l];const hired=arr.filter(isHired);
+      const decided=hired.length+arr.filter(isCancelled).length+arr.filter(isClosedLost).length;
+      const ttf=hired.map(r=>num(r.daysToFill)).filter(Number.isFinite);
+      const tr=el('tr');tr.innerHTML=
+        `<td><span class="tag" style="background:${lineColor(l)}22;color:${lineColor(l)}">${l}</span></td>
+         <td class="num"><div class="bar-cell"><span class="mb"><i style="width:${arr.length/maxTot*100}%;background:${lineColor(l)}"></i></span>${arr.length}</div></td>
+         <td class="num">${arr.filter(isActive).length}</td>
+         <td class="num">${hired.length}</td>
+         <td class="num">${decided?pct(hired.length,decided)+'%':'—'}</td>
+         <td class="num">${ttf.length?Math.round(avg(ttf))+'d':'—'}</td>`;
+      t.appendChild(tr);
+    });
+  }
+
+  function renderTTF(rows){
+    const byL={};
+    rows.filter(isHired).forEach(r=>{const d=num(r.daysToFill);if(Number.isFinite(d))(byL[r.serviceLine]=byL[r.serviceLine]||[]).push(d);});
+    const order=LINE_ORDER.filter(l=>byL[l]);
+    const box=document.getElementById('ttf');box.innerHTML='';
+    if(!order.length){box.innerHTML='<div class="empty">No fill-time data in this slice.</div>';return;}
+    const max=Math.max(...order.map(l=>avg(byL[l])));
+    order.forEach(l=>{const a=avg(byL[l]);
+      const row=el('div','hb');
+      row.innerHTML=`<div class="l">${l}</div><div class="t"><i style="width:${a/max*100}%;background:${lineColor(l)}"></i></div><div class="v">${Math.round(a)}d</div>`;
+      box.appendChild(row);});
+  }
+
+  // ---- aging / at-risk ----
+  let riskSort={k:'daysSinceReceived',dir:-1};
+  function renderRisk(rows){
+    const active=rows.filter(isActive);
+    const data=active.map(r=>({r,age:num(r.daysSinceReceived)}));
+    data.sort((a,b)=>{
+      let va=a.r[riskSort.k],vb=b.r[riskSort.k];
+      if(riskSort.k==='daysSinceReceived'){va=a.age;vb=b.age;}
+      if(typeof va==='string')return va.localeCompare(vb||'')*riskSort.dir;
+      return ((va||0)-(vb||0))*riskSort.dir;
+    });
+    document.getElementById('riskHint').textContent=active.filter(isAtRisk).length+' flagged · '+active.length+' live';
+    const t=document.getElementById('riskTbl');
+    const cols=[['reqNum','#'],['jobTitle','Role'],['company','Company'],['serviceLine','Line'],
+      ['status','Stage'],['recruiter','Recruiter'],['activeCandidates','Cand.'],['daysSinceReceived','Days']];
+    t.innerHTML='<tr>'+cols.map(c=>`<th data-k="${c[0]}" class="${['activeCandidates','daysSinceReceived','reqNum'].includes(c[0])?'num':''}">${c[1]}</th>`).join('')+'</tr>';
+    if(!data.length){t.innerHTML+='<tr><td colspan="8"><div class="empty">No live requests in this slice.</div></td></tr>';}
+    data.slice(0,200).forEach(({r,age})=>{
+      const cls=!Number.isFinite(age)?'age-ok':age>365?'age-bad':age>270?'age-warn':'age-ok';
+      const repl=num(r.statusDigit)===90?'<span class="miniflag">REPL</span>':'';
+      const stageShort=(r.status||'').replace(/^-?\d+\s*-\s*/,'');
+      const tr=el('tr');
+      tr.innerHTML=`<td class="num pillcell">${r.reqNum||'—'}</td>
+        <td title="${esc(r.jobTitle)}">${trunc(r.jobTitle,32)}</td>
+        <td title="${esc(r.company)}">${trunc(r.company,26)}</td>
+        <td><span class="tag" style="background:${lineColor(r.serviceLine)}22;color:${lineColor(r.serviceLine)}">${r.serviceLine}</span></td>
+        <td><span class="pill">${trunc(stageShort,22)}</span> ${repl}</td>
+        <td>${trunc(r.recruiter,18)||'<span style="color:var(--dim)">—</span>'}</td>
+        <td class="num">${Number.isFinite(num(r.activeCandidates))?r.activeCandidates:'—'}</td>
+        <td class="num ${cls}">${Number.isFinite(age)?age:'—'}</td>`;
+      t.appendChild(tr);
+    });
+    t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;
+      riskSort.dir=riskSort.k===k?-riskSort.dir:-1;riskSort.k=k;renderRisk(currentRows);});
+  }
+
+  // ---- leaderboards ----
+  let recSort={k:'live',dir:-1}, podSort={k:'live',dir:-1};
+  function leaderboard(rows,keyField,sortState,tableId){
+    const grp={};
+    rows.forEach(r=>{const name=r[keyField];if(!name)return;
+      const g=grp[name]||(grp[name]={name,live:0,hired:0,ttf:[],slaIn:0,slaTot:0});
+      if(isActive(r))g.live++;
+      if(isHired(r)){g.hired++;const d=num(r.daysToFill);if(Number.isFinite(d))g.ttf.push(d);}
+      if(r.slaOpenToHired){g.slaTot++;if(/in sla/i.test(r.slaOpenToHired))g.slaIn++;}
+    });
+    let arr=Object.values(grp).map(g=>({...g,avgttf:g.ttf.length?avg(g.ttf):null,sla:g.slaTot?pct(g.slaIn,g.slaTot):null}));
+    arr.sort((a,b)=>{let va=a[sortState.k],vb=b[sortState.k];
+      if(typeof va==='string')return va.localeCompare(vb)*sortState.dir;
+      return ((va==null?-1:va)-(vb==null?-1:vb))*sortState.dir;});
+    const t=document.getElementById(tableId);
+    const cols=[['name','Name'],['live','Live'],['hired','Hired'],['avgttf','Avg TTF'],['sla','SLA %']];
+    t.innerHTML='<tr>'+cols.map(c=>`<th data-k="${c[0]}" class="${c[0]==='name'?'':'num'}">${c[1]}</th>`).join('')+'</tr>';
+    const maxLive=Math.max(1,...arr.map(g=>g.live));
+    if(!arr.length)t.innerHTML+='<tr><td colspan="5"><div class="empty">No data in this slice.</div></td></tr>';
+    arr.slice(0,60).forEach(g=>{const tr=el('tr');
+      tr.innerHTML=`<td>${trunc(g.name,24)}</td>
+        <td class="num"><div class="bar-cell"><span class="mb"><i style="width:${g.live/maxLive*100}%"></i></span>${g.live}</div></td>
+        <td class="num">${g.hired}</td>
+        <td class="num">${g.avgttf!=null?Math.round(g.avgttf)+'d':'—'}</td>
+        <td class="num" style="color:${g.sla==null?'var(--dim)':g.sla>=50?'var(--good)':'var(--warn)'}">${g.sla!=null?g.sla+'%':'—'}</td>`;
+      t.appendChild(tr);});
+    t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;
+      sortState.dir=sortState.k===k?-sortState.dir:-1;sortState.k=k;
+      tableId==='recTbl'?renderRec(currentRows):renderPod(currentRows);});
+  }
+  const renderRec=rows=>leaderboard(rows,'recruiter',recSort,'recTbl');
+  const renderPod=rows=>leaderboard(rows,'podLeader',podSort,'podTbl');
+
+  // ---- monthly ----
+  function renderMonths(rows){
+    const m={};
+    rows.forEach(r=>{const t=Date.parse(r.requestDate||r.createdTime);if(!Number.isFinite(t))return;
+      const d=new Date(t);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const o=m[key]||(m[key]={total:0,hired:0,byLine:{}});o.total++;if(isHired(r))o.hired++;
+      o.byLine[r.serviceLine]=(o.byLine[r.serviceLine]||0)+1;});
+    const keys=Object.keys(m).sort().slice(-12);
+    const max=Math.max(1,...keys.map(k=>m[k].total));
+    const box=document.getElementById('months');box.innerHTML='';
+    if(!keys.length){box.innerHTML='<div class="empty">No dated requests in this slice.</div>';return;}
+    keys.forEach(k=>{const o=m[k];const col=el('div','mcol');
+      const h=o.total/max*100;
+      let stack='';LINE_ORDER.forEach(l=>{const v=o.byLine[l];if(v)stack+=`<i style="height:${v/o.total*h}%;background:${lineColor(l)}" title="${l}: ${v}"></i>`;});
+      const [yy,mm]=k.split('-');const lbl=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mm-1]+" '"+yy.slice(2);
+      col.innerHTML=`<div class="mv">${o.total}</div><div class="stack" style="height:${h}%">${stack}</div><div class="ml">${lbl}</div>`;
+      col.title=`${lbl}: ${o.total} requests · ${o.hired} hired`;
+      box.appendChild(col);});
+  }
+
+  // ---- utils ----
+  function trunc(s,n){s=(s==null?'':String(s));return s.length>n?esc(s.slice(0,n-1))+'…':esc(s);}
+  function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  // ---- chips ----
+  function buildChips(){
+    const present=LINE_ORDER.filter(l=>BOARD.some(r=>r.serviceLine===l));
+    const box=document.getElementById('lineChips');box.innerHTML='';
+    const all=el('button','chip on');all.textContent='All lines';all.dataset.line='__all';box.appendChild(all);
+    present.forEach(l=>{const c=el('button','chip on');c.dataset.line=l;
+      c.innerHTML=`<span class="sw" style="background:${lineColor(l)}"></span>${l}`;box.appendChild(c);});
+    box.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+      const l=c.dataset.line;
+      if(l==='__all'){state.lines=new Set(present);}
+      else{ if(state.lines.size===present.length){state.lines=new Set([l]);} // first click isolates
+            else if(state.lines.has(l)){state.lines.delete(l);if(!state.lines.size)state.lines=new Set(present);}
+            else state.lines.add(l);}
+      syncChips(present);render();
+    });
+    return present;
+  }
+  function syncChips(present){
+    document.querySelectorAll('#lineChips .chip').forEach(c=>{
+      const l=c.dataset.line;
+      if(l==='__all')c.classList.toggle('on',state.lines.size===present.length);
+      else c.classList.toggle('on',state.lines.has(l));
+    });
+  }
+
+  // ---- KANBAN ----
+  const fmtMoney=n=>n==null?'—':'$'+Math.round(n).toLocaleString();
+  const REV=DATA.revenue||{months:[],wonMonth:0,wonQuarter:0,wonYTD:0,invoicedYTD:0,collectedYTD:0,invoicedTotal:0,collectedTotal:0};
+  const CLOSE_ORDER=['Cancelled (before submission)','Cancelled (after submission)','Cancelled (change order)','Unresponsive (closed)','Closed / Paused / M.I.A.','Closed (other)'];
+  const inPipeline=c=>c.bucket===state.pipeline;
+  // revenue helpers (Core+WG tracker deals carry invoice/payment/paid)
+  const TRACKER_DEALS=BOARD.filter(c=>c.source==='tracker');
+  const SNAP_IDX=(()=>{const m=(DATA.snapshotMonth||'').split('-');return m.length===2?(+m[0])*12+(+m[1]-1):null;})();
+  const midx=s=>{const t=Date.parse(s);if(!Number.isFinite(t))return null;const d=new Date(t);return d.getUTCFullYear()*12+d.getUTCMonth();};
+  // cash collected, placed into months: full payments lump at payment month; installments
+  // spread Total Paid evenly across months since first payment (so the months sum to Total Paid).
+  function collectedSpread(c){
+    if(!c.paymentDate||!(c.totalPaid>0))return [];
+    const start=midx(c.paymentDate);if(start==null)return [];
+    if(c.dealValue!=null&&c.totalPaid>=c.dealValue-1)return [{idx:start,amt:c.totalPaid}];
+    const elapsed=SNAP_IDX!=null?Math.max(1,SNAP_IDX-start):1;
+    const inst=c.totalPaid/elapsed,out=[];
+    for(let k=0;k<elapsed;k++)out.push({idx:start+k,amt:inst});
+    return out;
+  }
+  // Revenue tab counts ONLY HRs in Invoice (7) or Placed (8) status.
+  // Closed/Paused/MIA (9) and earlier stages are excluded everywhere on this tab.
+  const isRevenueHR=c=>{const n=parseInt(c.rawStatus,10);return n===7||n===8;};
+  // Receivable = a revenue HR with an open balance.
+  const isReceivable=c=>isRevenueHR(c)&&c.dealValue!=null&&(c.dealValue-(c.totalPaid||0))>1;
+  // Won = placed deal value by Date Placed, computed over a (line/advisor-filtered) deal set
+  // so the figures respond to the White Glove / Core / both filter.
+  function wonStats(deals){
+    if(SNAP_IDX==null)return {month:0,quarter:0,ytd:0};
+    const sy=Math.floor(SNAP_IDX/12), sq=Math.floor((SNAP_IDX%12)/3);
+    let month=0,quarter=0,ytd=0;
+    deals.forEach(c=>{
+      if(c.stage!=='Placed / Hired'||!c.dealValue)return;
+      // when this deal was won: Date Placed, else Invoice Date, else Payment Date (Core has no Date Placed)
+      const wd=c.placedDate||c.invoiceDate||c.paymentDate;
+      const idx=midx(wd);if(idx==null||Math.floor(idx/12)!==sy)return;
+      ytd+=c.dealValue;
+      if(Math.floor((idx%12)/3)===sq){quarter+=c.dealValue;if(idx===SNAP_IDX)month+=c.dealValue;}
+    });
+    return {month,quarter,ytd};
+  }
+  function lineSearchFilter(arr){const q=state.q.trim().toLowerCase();
+    return arr.filter(c=>state.lines.has(c.serviceLine)&&(!q||((c.role||'')+' '+(c.company||'')+' '+(c.advisor||'')+' '+(c.hr||'')+' '+(c.candidate||'')).toLowerCase().includes(q)));}
+  function renderTiles(id,tiles){const box=document.getElementById(id);box.innerHTML='';
+    tiles.forEach(x=>{const c=el('div','kpi');c.style.setProperty('--bar',x.bar);
+      c.innerHTML=`<div class="lab">${x.lab}</div><div class="val">${x.val}</div><div class="note">${x.note||''}</div>`;box.appendChild(c);});}
+  function boardFiltered(){
+    const q=state.q.trim().toLowerCase();
+    return BOARD.filter(c=>{
+      if(!state.lines.has(c.serviceLine))return false;
+      if(!inPipeline(c))return false;
+      if(q){const blob=((c.role||'')+' '+(c.company||'')+' '+(c.advisor||'')+' '+(c.hr||'')+' '+(c.candidate||'')).toLowerCase();if(!blob.includes(q))return false;}
+      return true;
+    });
+  }
+  function renderCard(c){
+    const card=el('div','bcard');card.style.borderLeftColor=lineColor(c.serviceLine);
+    const ageCls=c.daysOpen==null?'':c.daysOpen>365?'age-bad':c.daysOpen>90?'age-warn':'';
+    const meta=[];
+    if(c.daysOpen!=null)meta.push(`<span class="m ${ageCls}" title="total days since the request opened">${c.daysOpen}d open</span>`);
+    if(c.presented!=null)meta.push(`<span class="m">${c.presented} pres.</span>`);
+    if(c.dealValue!=null)meta.push(`<span class="m deal">${fmtMoney(c.dealValue)}</span>`);
+    const flags=(c.flags||[]).map(f=>`<span class="fl ${/aging|closed|unrespons|paused/i.test(f)?'warn':''}">${esc(f)}</span>`).join('');
+    card.innerHTML=
+      (c.link?'<span class="ext">↗</span>':'')+
+      `<div class="role">${trunc(c.role,44)||'<span style="color:var(--dim)">(no title)</span>'}</div>`+
+      `<div class="co" title="${esc(c.company)}">${trunc(c.company,40)||'—'}</div>`+
+      (c.candidate?`<div class="cand" title="${esc(c.candidate)}">▸ ${trunc(c.candidate,34)}</div>`:'')+
+      `<div class="adv"><span class="lntag" style="background:${lineColor(c.serviceLine)}22;color:${lineColor(c.serviceLine)}">${c.serviceLine}</span>${trunc(c.advisor,20)||'—'}</div>`+
+      (meta.length?`<div class="meta">${meta.join('')}</div>`:'')+
+      (flags?`<div class="flags">${flags}</div>`:'');
+    card.title=(c.hr?'HR'+c.hr+' · ':'')+'click to open '+(c.source==='tracker'?'tracker':'Airtable');
+    if(c.link)card.onclick=()=>window.open(c.link,'_blank','noopener');
+    return card;
+  }
+  function renderColumn(name,cards,accent){
+    const sorted=cards.slice().sort((a,b)=>(b.dealValue||0)-(a.dealValue||0)||(b.daysOpen||0)-(a.daysOpen||0));
+    const sum=cards.reduce((s,c)=>s+(c.dealValue||0),0);
+    const colEl=el('div','bcol');
+    const head=el('div','bcol-head');
+    head.innerHTML=`<div class="t">${esc(name)}<span class="n">${cards.length}</span></div>`+
+      (sum>0?`<div class="sum">${fmtMoney(sum)}</div>`:'')+
+      `<div class="stbar" style="background:${accent||'var(--accent)'}"></div>`;
+    colEl.appendChild(head);
+    const body=el('div','bcol-body');const CAP=80;
+    sorted.slice(0,CAP).forEach(c=>body.appendChild(renderCard(c)));
+    if(sorted.length>CAP){const m=el('div','more');m.textContent='+'+(sorted.length-CAP)+' more';body.appendChild(m);}
+    colEl.appendChild(body);return colEl;
+  }
+  function renderBoardKpis(cards){
+    const sum=arr=>arr.reduce((s,c)=>s+(c.dealValue||0),0);
+    const wg=cards.filter(c=>c.serviceLine==='White Glove'),core=cards.filter(c=>c.serviceLine==='Core');
+    const ages=cards.map(c=>c.daysOpen).filter(x=>Number.isFinite(x));
+    const firstLab={active:'Active pipeline $',stale:'Stale value',placed:'Placed value',cancelled:'Lost value'}[state.pipeline];
+    const lastTile=(state.pipeline==='active'||state.pipeline==='stale')
+      ?{lab:'Avg days open',val:ages.length?fmt(avg(ages))+'d':'—',note:`<b>${fmt(ages.length)}</b> reqs`,bar:'var(--flex)'}
+      :{lab:'Avg deal size',val:cards.filter(c=>c.dealValue).length?fmtMoney(sum(cards)/cards.filter(c=>c.dealValue).length):'—',note:'per deal w/ value',bar:'var(--flex)'};
+    const k=[
+      {lab:firstLab,val:fmtMoney(sum(cards)),note:`<b>${fmt(cards.filter(c=>c.dealValue!=null).length)}</b> deals w/ value`,bar:'var(--good)'},
+      {lab:'White Glove $',val:fmtMoney(sum(wg)),note:`<b>${fmt(wg.length)}</b> requests`,bar:'var(--wg)'},
+      {lab:'Core $',val:fmtMoney(sum(core)),note:`<b>${fmt(core.length)}</b> requests`,bar:'var(--core)'},
+      {lab:'Won this month',val:fmtMoney(wonStats(lineSearchFilter(BOARD)).month),note:'placed deal value',bar:'var(--passport)'},
+      {lab:'Requests shown',val:fmt(cards.length),note:state.pipeline+' pipeline',bar:'var(--accent)'},
+      lastTile,
+    ];
+    const box=document.getElementById('boardKpis');box.innerHTML='';
+    k.forEach(x=>{const c=el('div','kpi');c.style.setProperty('--bar',x.bar);
+      c.innerHTML=`<div class="lab">${x.lab}</div><div class="val">${x.val}</div><div class="note">${x.note}</div>`;box.appendChild(c);});
+  }
+  function renderBoard(){
+    const cards=boardFiltered();
+    renderBoardKpis(cards);
+    const box=document.getElementById('boardCols');box.innerHTML='';
+    const STAGE_ACCENT=['var(--internal)','var(--accent)','var(--passport)','var(--core)','var(--flex)'];
+    if(!cards.length){box.innerHTML='<div class="empty">No requests in this pipeline match the current filters.</div>';}
+    else if(state.group==='stage'){
+      if(state.pipeline==='cancelled'){
+        CLOSE_ORDER.filter(r=>cards.some(c=>c.closeReason===r)).forEach((r,i)=>
+          box.appendChild(renderColumn(r,cards.filter(c=>c.closeReason===r),i<3?'var(--bad)':'var(--warn)')));
+      }else if(state.pipeline==='placed'){
+        box.appendChild(renderColumn('Placed / Hired',cards,'var(--good)'));
+      }else{ // active or stale -> live-stage columns
+        ACTIVE_STAGES.forEach((name,i)=>box.appendChild(renderColumn(name,cards.filter(c=>c.stage===name),STAGE_ACCENT[i%5])));
+      }
+    } else {
+      const m={};cards.forEach(c=>{const a=c.advisor&&c.advisor.trim()?c.advisor:'— Unassigned';(m[a]=m[a]||[]).push(c);});
+      Object.entries(m).sort((a,b)=>b[1].length-a[1].length).forEach(([name,cs])=>box.appendChild(renderColumn(name,cs,'var(--accent)')));
+    }
+    const pipeName={active:'active pipeline (current work)',stale:'stale — open &gt;180d, likely need closing',placed:'placed / won',cancelled:'cancelled / closed'}[state.pipeline];
+    const srcNote=state.pipeline==='active'?' · Core + WG from the tracker, Passport &amp; rest from Airtable':'';
+    document.getElementById('boardHint').innerHTML=
+      `${fmt(cards.length)} requests · ${pipeName} · grouped by ${state.group==='stage'?'stage':'Talent Advisor'}${srcNote} · click a card to open it`;
+  }
+  // ---- REVENUE ----
+  function revFiltered(){
+    const q=state.q.trim().toLowerCase();
+    return TRACKER_DEALS.filter(c=>{
+      if(!state.lines.has(c.serviceLine))return false;
+      if(state.advisor&&c.advisor!==state.advisor)return false;
+      if(q){const blob=((c.company||'')+' '+(c.advisor||'')+' '+(c.role||'')+' '+(c.hr||'')).toLowerCase();if(!blob.includes(q))return false;}
+      return true;
+    });
+  }
+  let advSort={k:'ar',dir:-1}, arSort={k:'outstanding',dir:-1};
+  function renderRevenue(){
+    const deals=revFiltered().filter(isRevenueHR);  // Placed/Invoice status only
+    const won=wonStats(deals);
+    const invoicedDeals=deals.filter(c=>c.invoiceDate&&c.dealValue!=null);
+    const inv={},col={};
+    deals.forEach(c=>{
+      if(c.invoiceDate&&c.dealValue!=null){const i=midx(c.invoiceDate);if(i!=null)inv[i]=(inv[i]||0)+c.dealValue;}
+      collectedSpread(c).forEach(s=>{col[s.idx]=(col[s.idx]||0)+s.amt;});
+    });
+    const idxs=[...new Set([...Object.keys(inv),...Object.keys(col)].map(Number))].sort((a,b)=>a-b);
+    const totInv=invoicedDeals.reduce((s,c)=>s+c.dealValue,0);
+    const totCol=deals.reduce((s,c)=>s+(c.totalPaid||0),0);
+    const openCust=deals.filter(isReceivable);
+    const ar=openCust.reduce((s,c)=>s+(c.dealValue-(c.totalPaid||0)),0);
+    const rate=totInv?Math.round(totCol/totInv*100):0;
+    renderTiles('revKpis',[
+      {lab:'Invoiced',val:fmtMoney(totInv),note:`<b>${fmt(invoicedDeals.length)}</b> deals invoiced`,bar:'var(--core)'},
+      {lab:'Collected',val:fmtMoney(totCol),note:`<b>${rate}%</b> of invoiced`,bar:'var(--good)'},
+      {lab:'Accounts receivable',val:fmtMoney(ar),note:`<b>${fmt(openCust.length)}</b> open balances`,bar:'var(--bad)'},
+      {lab:'Collection rate',val:rate+'%',note:'collected ÷ invoiced',bar:'var(--flex)'},
+      {lab:'Won YTD',val:fmtMoney(won.ytd),note:'placed deal value',bar:'var(--accent)'},
+      {lab:'Won this month',val:fmtMoney(won.month),note:'placed deal value',bar:'var(--passport)'},
+    ]);
+    const lineNote=[...state.lines].filter(l=>l==='White Glove'||l==='Core').join(' + ')||'no line selected';
+    document.getElementById('revHint').innerHTML=`${fmt(deals.length)} Placed/Invoice deals · ${lineNote}${state.advisor?' · advisor: '+esc(state.advisor):''} · closed/paused excluded · click a receivable row to open the record`;
+    // chart
+    const ch=document.getElementById('revChart');ch.innerHTML='';
+    let leg=document.getElementById('revLeg');
+    if(!idxs.length){ch.innerHTML='<div class="empty">No invoiced or collected amounts for this filter.</div>';if(leg)leg.innerHTML='';}
+    else{
+      const max=Math.max(1,...idxs.map(i=>Math.max(inv[i]||0,col[i]||0)));
+      const kf=v=>v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v);
+      const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      idxs.forEach(i=>{const lbl=MON[i%12]+" '"+String(Math.floor(i/12)).slice(2);
+        const c2=el('div','rmonth');
+        c2.innerHTML=`<div class="rbars">
+          <div class="rb inv" style="height:${(inv[i]||0)/max*100}%"><span class="cap">${kf(inv[i]||0)}</span></div>
+          <div class="rb col" style="height:${(col[i]||0)/max*100}%"><span class="cap">${kf(col[i]||0)}</span></div>
+        </div><div class="rl">${lbl}</div>`;
+        c2.title=`${lbl} · invoiced ${fmtMoney(inv[i]||0)} · collected ${fmtMoney(col[i]||0)}`;
+        ch.appendChild(c2);});
+      if(!leg){leg=el('div','revleg');leg.id='revLeg';ch.parentNode.appendChild(leg);}
+      leg.innerHTML='<div><span class="sw" style="background:var(--core)"></span>Invoiced</div><div><span class="sw" style="background:var(--good)"></span>Collected</div>';
+    }
+    renderAdvTable(deals);
+    renderArTable(openCust);
+  }
+  function renderAdvTable(deals){
+    const g={};
+    deals.forEach(c=>{const a=c.advisor&&c.advisor.trim()?c.advisor:'— Unassigned';
+      const o=g[a]||(g[a]={advisor:a,inv:0,col:0,ar:0});
+      if(c.invoiceDate&&c.dealValue!=null)o.inv+=c.dealValue;
+      if(isReceivable(c))o.ar+=(c.dealValue-(c.totalPaid||0));
+      o.col+=(c.totalPaid||0);});
+    let arr=Object.values(g).filter(o=>o.inv||o.col);
+    arr.sort((a,b)=>{const va=a[advSort.k],vb=b[advSort.k];return typeof va==='string'?va.localeCompare(vb)*advSort.dir:(va-vb)*advSort.dir;});
+    const t=document.getElementById('revAdvTbl');
+    const cols=[['advisor','Advisor'],['inv','Invoiced'],['col','Collected'],['ar','Receivable']];
+    t.innerHTML='<tr>'+cols.map(c=>`<th data-k="${c[0]}" class="${c[0]==='advisor'?'':'num'}">${c[1]}</th>`).join('')+'</tr>';
+    if(!arr.length)t.innerHTML+='<tr><td colspan="4"><div class="empty">No billing data for this filter.</div></td></tr>';
+    arr.forEach(o=>{const tr=el('tr');tr.innerHTML=`<td>${trunc(o.advisor,20)}</td><td class="num">${fmtMoney(o.inv)}</td><td class="num">${fmtMoney(o.col)}</td><td class="num" style="color:${o.ar>0?'var(--bad)':'var(--dim)'}">${fmtMoney(o.ar)}</td>`;t.appendChild(tr);});
+    t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;advSort.dir=advSort.k===k?-advSort.dir:-1;advSort.k=k;renderAdvTable(deals);});
+  }
+  function renderArTable(list){
+    const data=list.map(c=>({co:c.company,line:c.serviceLine,adv:c.advisor,deal:c.dealValue,paid:c.totalPaid||0,outstanding:c.dealValue-(c.totalPaid||0),link:c.link,noInv:!c.invoiceDate}));
+    data.sort((a,b)=>{const va=a[arSort.k],vb=b[arSort.k];return typeof va==='string'?va.localeCompare(vb||'')*arSort.dir:((va||0)-(vb||0))*arSort.dir;});
+    const missing=data.filter(d=>d.noInv).length;
+    document.getElementById('revArHint').textContent=fmtMoney(data.reduce((s,d)=>s+d.outstanding,0))+' owed'+(missing?' · '+missing+' missing invoice date':'');
+    const t=document.getElementById('revArTbl');
+    const cols=[['co','Customer'],['line','Line'],['adv','Advisor'],['deal','Deal'],['paid','Paid'],['outstanding','Owed']];
+    t.innerHTML='<tr>'+cols.map(c=>`<th data-k="${c[0]}" class="${['deal','paid','outstanding'].includes(c[0])?'num':''}">${c[1]}</th>`).join('')+'</tr>';
+    if(!data.length)t.innerHTML+='<tr><td colspan="6"><div class="empty">No open balances — all invoiced deals fully collected.</div></td></tr>';
+    data.slice(0,250).forEach(d=>{const tr=el('tr');if(d.link){tr.style.cursor='pointer';tr.onclick=()=>window.open(d.link,'_blank','noopener');}
+      tr.innerHTML=`<td title="${esc(d.co)}">${trunc(d.co,22)}${d.noInv?' <span class="miniflag warn" title="In Placed/Invoice status but no Invoice Date set in the tracker">no inv date</span>':''}</td><td><span class="tag" style="background:${lineColor(d.line)}22;color:${lineColor(d.line)}">${d.line}</span></td><td>${trunc(d.adv,13)||'—'}</td><td class="num">${fmtMoney(d.deal)}</td><td class="num">${fmtMoney(d.paid)}</td><td class="num" style="color:var(--bad);font-weight:700">${fmtMoney(d.outstanding)}</td>`;
+      t.appendChild(tr);});
+    t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;arSort.dir=arSort.k===k?-arSort.dir:-1;arSort.k=k;renderArTable(list);});
+  }
+
+  function updateFoot(){
+    document.getElementById('foot').innerHTML=
+      `Active (tracker): <b>${fmt(BOARD.filter(c=>c.bucket==='active').length)}</b> · Stale: <b>${fmt(BOARD.filter(c=>c.bucket==='stale').length)}</b> · Placed: <b>${fmt(BOARD.filter(c=>c.bucket==='placed').length)}</b> · Cancelled: <b>${fmt(BOARD.filter(c=>c.bucket==='cancelled').length)}</b><br>`+
+      `Core + WG from the tracker · Passport &amp; rest from Airtable · refresh with <code>node refresh.js</code> (or ask Claude) then reload`;
+  }
+
+  // ---- render orchestration ----
+  let currentRows=[];
+  function render(){
+    if(state.view==='kanban'){renderBoard();updateFoot();return;}
+    if(state.view==='revenue'){renderRevenue();updateFoot();return;}
+    currentRows=baseFiltered();
+    renderKPIs(currentRows);
+    renderFunnel(currentRows);
+    renderOutcomes(currentRows);
+    renderLineTable(currentRows);
+    renderTTF(currentRows);
+    renderRisk(currentRows);
+    renderRec(currentRows);
+    renderPod(currentRows);
+    renderMonths(currentRows);
+    updateFoot();
+  }
+
+  // ---- wire filters ----
+  function setView(v){
+    state.view=v;
+    document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
+    document.getElementById('kanbanView').hidden=(v!=='kanban');
+    document.getElementById('revenueView').hidden=(v!=='revenue');
+    document.querySelectorAll('.kanban-only').forEach(e=>e.hidden=(v!=='kanban'));
+    document.querySelectorAll('.revenue-only').forEach(e=>e.hidden=(v!=='revenue'));
+    render();
+  }
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+  document.querySelectorAll('#groupSeg button').forEach(b=>b.onclick=()=>{
+    state.group=b.dataset.g;document.querySelectorAll('#groupSeg button').forEach(x=>x.classList.toggle('on',x===b));render();});
+  document.querySelectorAll('#pipeSeg button').forEach(b=>b.onclick=()=>{
+    state.pipeline=b.dataset.p;document.querySelectorAll('#pipeSeg button').forEach(x=>x.classList.toggle('on',x===b));render();});
+  let qt;document.getElementById('q').oninput=e=>{clearTimeout(qt);qt=setTimeout(()=>{state.q=e.target.value;render();},180);};
+
+  // populate advisor dropdown from tracker deals
+  (function(){
+    const advs=[...new Set(TRACKER_DEALS.map(c=>c.advisor).filter(a=>a&&a.trim()))].sort((a,b)=>a.localeCompare(b));
+    const sel=document.getElementById('advSel');
+    advs.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+    sel.onchange=()=>{state.advisor=sel.value;render();};
+  })();
+
+  document.getElementById('stamp').textContent='updated '+new Date(DATA.generatedAt).toLocaleString();
+  buildChips();
+  setView('kanban');  // land on the active board
+  }  // end initApp
+
+  async function boot(){
+    let data=null;
+    if(LIVE_URL){
+      const st=document.getElementById('stamp'); if(st)st.textContent='loading live data…';
+      try{const r=await fetch(LIVE_URL,{cache:'no-store'}); if(r.ok) data=await r.json();}catch(e){}
+    }
+    if(!data) data=window.RECRUITING_DATA;            // fallback to baked snapshot
+    if(!data){document.body.innerHTML='<div class="empty" style="padding:80px">No data available.</div>';return;}
+    initApp(data);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
